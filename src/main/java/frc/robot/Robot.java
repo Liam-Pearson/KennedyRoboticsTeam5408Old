@@ -35,6 +35,7 @@ public class Robot extends TimedRobot {
   private Talon Motor2FrontRight;
   private Talon Motor1BackLeft;
   private Talon Motor0FrontLeft;
+  private Talon Motor4Pully;
 
 
   //variables for drive motors
@@ -55,6 +56,7 @@ public class Robot extends TimedRobot {
     Motor1BackLeft = new Talon(1); //right drive motor
     Motor2FrontRight = new Talon(2); //left drive motor (back left)
     Motor3BackRight = new Talon(3); //right drive motor
+    Motor4Pully = new Talon(4); // pully system drive motor.
 
     //init of controllers/joysticks ([Name] = new [Type]([USBPort]))
     joystick = new Joystick(0);
@@ -63,16 +65,15 @@ public class Robot extends TimedRobot {
     //CameraServer.startAutomaticCapture(1);
   }
 
+  double joystickXAxisPos;
+  double joystickYAxisPos;
+  double joystickZAxisPos;
+  double joystickSpeedAxisPos;
 
   // drive motor control.
-  double joystickXAxisPos = joystick.getRawAxis(0); //x axis on joystick
-  double joystickYAxisPos = joystick.getRawAxis(1); //y axis on joystick
-  double joystickZAxisPos = joystick.getRawAxis(2); //z axis on joystick
-  double joystickSpeedAxisPos = joystick.getRawAxis(3); //y axis on joystick
-
   double deadzoneLimit = 0.4; // sets the value that the joystick position must exceed for movement of the robot to occur.
 
-  double speedDivisonOfRobot = 4;
+  double speed = 0;
 
   /**
    * This function is called every 20 ms, no matter the mode. Use this for items like diagnostics
@@ -89,6 +90,11 @@ public class Robot extends TimedRobot {
     // block in order for anything in the Command-based framework to work.
     CommandScheduler.getInstance().run();
 
+    joystickXAxisPos = joystick.getRawAxis(0); //x axis on joystick
+    joystickYAxisPos = joystick.getRawAxis(1); //y axis on joystick
+    joystickZAxisPos = joystick.getRawAxis(2); //z axis on joystick
+    joystickSpeedAxisPos = joystick.getRawAxis(3); //y axis on joystick
+
     // prints the current position of 
     System.out.println("x-pos: " + joystickXAxisPos);
     System.out.println("y-pos: " + joystickYAxisPos);
@@ -104,16 +110,21 @@ public class Robot extends TimedRobot {
       joystickYAxisPos = 0; // sets value of joystickYAxisPos to 0 if joystick value is under the deadzoneLimit.
     } // end if.
 
+    speed = ((((joystickSpeedAxisPos-1))*-7.5)-15)*-1; // sets the speed of the robot by dividing the motor speed by the speed value. The math done here is awful. Enjoy.
+
+    System.out.println("Joystick pos: " + joystickSpeedAxisPos + "\n Speed: " + speed);
+
     // setting speed of left and right motors.
-    leftMotors = (joystickYAxisPos+joystickXAxisPos+joystickSpeedAxisPos)/speedDivisonOfRobot; // left motors are postive values. The value is then divided to set speed.
-    rightMotors = (joystickYAxisPos-joystickXAxisPos-joystickSpeedAxisPos)/speedDivisonOfRobot; // right motors are negative values. The value is then divided to set speed.
-    
+    leftMotors = (joystickYAxisPos+joystickXAxisPos+joystickZAxisPos+joystickSpeedAxisPos)/200; // left motors are postive values. The value is then divided to set speed.
+    rightMotors = (joystickYAxisPos-joystickXAxisPos-joystickZAxisPos-joystickSpeedAxisPos)/200; // right motors are negative values. The value is then divided to set speed.
 
     // motors are inverted depending on the side. To move forward, left motors must be positive values, while right side motors must be set to negative values, or vice-versa.
     Motor1BackLeft.set(leftMotors); // setting speed of back left drive motor.
     Motor3BackRight.set(rightMotors*-1); // setting speed of back right motor.
     Motor0FrontLeft.set(leftMotors); // setting speed of front left drive motor.
     Motor2FrontRight.set(rightMotors*-1); // setting speed of front right motor.
+
+    Motor4Pully.set(0.02);
                     
     // no clue what this does.
     SmartDashboard.putNumber("left", rightMotors);
